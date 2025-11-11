@@ -5,7 +5,7 @@ function Initialize()
 	dofile(SKIN:MakePathAbsolute('@Resources\\DataManager.lua'))
 	dofile(SKIN:MakePathAbsolute('@Resources\\Renderer.lua'))
 	
-	outputFile = SELF:GetOption('DynamicMeterFile')
+	outputFile = SELF:GetOption('LayoutFile')
 	local taskFile = SELF:GetOption('TaskListFile')
 	local trashFile = SELF:GetOption('TrashTaskListFile')
 	local trashLimit = SELF:GetNumberOption('TRASH_LIMIT', 10)
@@ -13,7 +13,7 @@ function Initialize()
 	DataManager.Initialize(taskFile, trashFile, trashLimit)
 	
 	local config = {
-		FONT_FACE = SELF:GetOption('FONT_FACE', 'Inter'),
+		FONT_FACE = SELF:GetOption('FONT_FACE', 'Quicksand'),
 		FONT_SIZE = SELF:GetNumberOption('FONT_SIZE', 12),
 		BUTTON_SIZE = SELF:GetNumberOption('BUTTON_SIZE', 16),
 		SKIN_WIDTH = tonumber(SKIN:GetVariable('SkinWidth')) or 300,
@@ -93,4 +93,58 @@ end
 
 function AddTask(taskName)
 	return DataManager.AddTask(taskName)
+end
+
+-- Lista de fontes comuns instaladas no Windows
+local fontList = {
+	'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS',
+	'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Georgia', 'Impact',
+	'Lucida Console', 'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Palatino Linotype',
+	'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+	'Quicksand', 'Inter', 'Roboto', 'Open Sans', 'Montserrat', 'Poppins'
+}
+local currentFontIndex = 1
+
+function GetFontList()
+	return table.concat(fontList, '|')
+end
+
+function GetCurrentFont()
+	local currentFont = SKIN:GetVariable('FONT_FACE') or 'Segoe UI'
+	-- Encontra o índice da fonte atual
+	for i, font in ipairs(fontList) do
+		if font == currentFont then
+			currentFontIndex = i
+			break
+		end
+	end
+	return currentFont
+end
+
+function NextFont()
+	currentFontIndex = currentFontIndex + 1
+	if currentFontIndex > #fontList then
+		currentFontIndex = 1
+	end
+	local newFont = fontList[currentFontIndex]
+	SKIN:Bang('!SetVariable', 'FONT_FACE', newFont)
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'FONT_FACE', newFont)
+	SKIN:Bang('!WriteKeyValue', 'MeasureDynamicTasks', 'FONT_FACE', newFont)
+	SKIN:Bang('!UpdateMeasure', 'MeasureDynamicTasks')
+	SKIN:Bang('!Update')
+	return newFont
+end
+
+function PrevFont()
+	currentFontIndex = currentFontIndex - 1
+	if currentFontIndex < 1 then
+		currentFontIndex = #fontList
+	end
+	local newFont = fontList[currentFontIndex]
+	SKIN:Bang('!SetVariable', 'FONT_FACE', newFont)
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'FONT_FACE', newFont)
+	SKIN:Bang('!WriteKeyValue', 'MeasureDynamicTasks', 'FONT_FACE', newFont)
+	SKIN:Bang('!UpdateMeasure', 'MeasureDynamicTasks')
+	SKIN:Bang('!Update')
+	return newFont
 end
